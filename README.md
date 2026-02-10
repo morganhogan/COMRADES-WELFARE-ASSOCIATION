@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comrades Welfare Portal</title>
+    <style>
+        :root {
+            --welfare-blue: #003366;
+            --active-red: #d63031;
+            --light-bg: #f8f9fa;
+            --success: #27ae60;
+            --accent: #3498db;
+            --danger: #e74c3c;
+            --text: #2d3436;
+        }
+
+        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--light-bg); color: var(--text); }
+
+        .header {
+            background: var(--welfare-blue);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header h2 {
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        .admin-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 22px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.15);
+            padding: 10px;
+            border-radius: 50%;
+            border: 2px solid white;
+            transition: 0.3s;
+        }
+        .admin-btn:hover { background: var(--active-red); border-color: var(--active-red); }
+
+        .nav-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: white;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .nav-item {
+            padding: 20px 5px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--welfare-blue);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .nav-item.active { background: var(--active-red); color: white; }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            min-height: 500px;
+        }
+
+        .page { display: none; animation: slideIn 0.4s ease-out; }
+        .page.active { display: block; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f1f2f6; color: var(--welfare-blue); font-weight: bold; }
+        
+        /* Dynamic Status Pill Classes */
+        .status-pill {
+            padding: 5px 10px;
+            color: white;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 11px;
+            display: inline-block;
+            border-radius: 4px;
+        }
+        /* Color logic */
+        .status-approved { background-color: var(--success); }
+        .status-pending, .status-rejected { background-color: var(--active-red); }
+
+        .form-card { background: #f9f9f9; padding: 25px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #eee; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; font-family: inherit; }
+        #name-in { text-transform: uppercase; }
+
+        .btn-main { background: var(--welfare-blue); color: white; border: none; padding: 15px; border-radius: 6px; font-size: 18px; font-weight: 700; cursor: pointer; width: 100%; }
+        
+        .action-btn { padding: 6px 10px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 11px; margin-left: 5px; }
+        .btn-app { background: var(--success); font-size: 14px; padding: 8px 16px;}
+        .btn-rej { background: var(--danger); font-size: 14px; padding: 8px 16px;}
+        .btn-edit { background: var(--accent); }
+        .btn-del { background: var(--danger); }
+
+        .admin-section { border: 2px dashed var(--active-red); padding: 20px; border-radius: 10px; margin-bottom: 30px; background: #fff8f8; }
+
+        .details-cell { white-space: pre-wrap; line-height: 1.6; vertical-align: top; }
+        
+        .search-box {
+            margin-bottom: 20px;
+            background: #eef2f7;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #d1d8e0;
+        }
+
+        .rules-box {
+            background: #fff;
+            padding: 20px;
+            border-left: 5px solid var(--welfare-blue);
+            white-space: pre-wrap;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .footer {
+            background: var(--welfare-blue);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 22px; }
+            .header h2 { font-size: 14px; }
+            .admin-btn { right: 10px; padding: 6px; font-size: 18px; }
+            .nav-item { padding: 15px 2px; font-size: 11px; }
+            .container { padding: 15px; margin: 10px; }
+            th, td { padding: 10px 5px; font-size: 12px; }
+            .btn-main { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>COMRADES WELFARE</h1>
+    <h2>Management Information System</h2>
+    <div class="admin-btn" id="lock-icon" onclick="toggleAdmin()" title="Admin Login">🔒</div>
+</div>
+
+<div class="nav-bar">
+    <div class="nav-item active" id="tab-dashboard" onclick="showPage('dashboard')">Dashboard</div>
+    <div class="nav-item" id="tab-registration" onclick="showPage('registration')">Registration</div>
+    <div class="nav-item" id="tab-records" onclick="showPage('records')">Records</div>
+    <div class="nav-item" id="tab-rules" onclick="showPage('rules')">Rules</div>
+</div>
+
+<div class="container">
+    
+    <div id="dashboard" class="page active">
+        <h3 style="color: var(--welfare-blue);">📋 Welfare Member List</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>NO.</th>
+                        <th>NAME</th>
+                        <th>PHONE</th>
+                        <th>SAVINGS</th>
+                        <th>STATUS</th>
+                        <th class="admin-only-cell" style="display: none;">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="dash-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="registration" class="page">
+        <div id="admin-history" class="admin-section" style="display: none;">
+            <h3 style="color: var(--active-red); margin-top: 0;">🛠️ Admin Approval Panel</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>PHONE</th>
+                            <th>ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h3 style="margin-top:0;">New Member Signup</h3>
+            <label style="font-weight:600">Full Name (Auto-Capital)</label>
+            <input type="text" id="name-in" placeholder="ENTER YOUR FULL NAME" oninput="this.value = this.value.toUpperCase()">
+            <label style="font-weight:600">Phone Number</label>
+            <input type="text" id="phone-in" placeholder="e.g. 0712345678">
+            <button class="btn-main" onclick="submitReg()">SUBMIT REGISTRATION</button>
+        </div>
+    </div>
+
+    <div id="records" class="page">
+        <h3 style="color: var(--welfare-blue);">💰 Collection Records</h3>
+        <div class="search-box">
+            <input type="text" id="record-search" placeholder="Search No or Name..." onkeyup="renderRecords()" style="margin-bottom:0;">
+        </div>
+
+        <div id="admin-record-entry" class="admin-section" style="display: none;">
+            <h3 style="color: var(--active-red); margin-top: 0;">🛠️ Add New Record</h3>
+            <input type="date" id="rec-date">
+            <input type="text" id="rec-memno" placeholder="Member No.">
+            <input type="text" id="rec-person" placeholder="Received By">
+            <textarea id="rec-details" rows="4" placeholder="Transaction Details..."></textarea>
+            <button class="btn-main" onclick="addRecord()" style="background: var(--success);">SAVE RECORD</button>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>NO.</th>
+                        <th>RECEIVER</th>
+                        <th>DETAILS</th>
+                        <th class="admin-only-cell" style="display: none;">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="record-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="rules" class="page">
+        <h3 style="color: var(--welfare-blue);">📜 Welfare Rules</h3>
+        <div id="admin-rules-section" class="admin-section" style="display: none;">
+            <h3 style="color: var(--active-red); margin-top: 0;">🛠️ Edit Rules (Admin)</h3>
+            <textarea id="rules-input" rows="10" placeholder="Write rules here..."></textarea>
+            <button class="btn-main" onclick="updateRules()" style="background: var(--success);">SAVE RULES</button>
+        </div>
+        <div class="rules-box" id="rules-display">No rules set yet.</div>
+    </div>
+
+</div>
+
+<div class="footer">
+    <strong>COMRADES WELFARE SYSTEM </strong><br>
+    MORGAN HOGAN &copy; 2026<br>
+    <small>IT TECHNICIAN; MORGAN HOGAN </small>
+</div>
+
+<script>
+    let members = JSON.parse(localStorage.getItem('comrades_sys')) || [];
+    let financialRecords = JSON.parse(localStorage.getItem('comrades_records')) || [];
+    let welfareRules = localStorage.getItem('comrades_rules_text') || "1. Respect all members.\n2. Pay contributions on time.";
+    let isAdmin = false;
+
+    const secret = "NDE3MzgyMDg="; 
+
+    function toggleAdmin() {
+        if (!isAdmin) {
+            const pass = prompt("Administrator Password Required:");
+            if (btoa(pass) === secret) {
+                isAdmin = true;
+                document.getElementById('lock-icon').innerText = "🔓";
+                document.getElementById('lock-icon').style.background = "var(--active-red)";
+                document.getElementById('admin-history').style.display = "block";
+                document.getElementById('admin-record-entry').style.display = "block";
+                document.getElementById('admin-rules-section').style.display = "block";
+                document.querySelectorAll('.admin-only-cell').forEach(el => el.style.display = "table-cell");
+            } else { alert("Incorrect password."); }
+        } else {
+            isAdmin = false;
+            document.getElementById('lock-icon').innerText = "🔒";
+            document.getElementById('lock-icon').style.background = "rgba(255,255,255,0.15)";
+            document.getElementById('admin-history').style.display = "none";
+            document.getElementById('admin-record-entry').style.display = "none";
+            document.getElementById('admin-rules-section').style.display = "none";
+            document.querySelectorAll('.admin-only-cell').forEach(el => el.style.display = "none");
+        }
+        renderDashboard(); renderRecords(); renderHistory(); renderRules();
+    }
+
+    function showPage(pageId) {
+        document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + pageId).classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        if(pageId === 'rules') renderRules();
+    }
+
+    function updateRules() {
+        const text = document.getElementById('rules-input').value;
+        welfareRules = text;
+        localStorage.setItem('comrades_rules_text', text);
+        renderRules();
+        alert("Rules Updated!");
+    }
+
+    function renderRules() {
+        document.getElementById('rules-display').innerText = welfareRules;
+        document.getElementById('rules-input').value = welfareRules;
+    }
+
+    function submitReg() {
+        const name = document.getElementById('name-in').value.toUpperCase();
+        const phone = document.getElementById('phone-in').value;
+        if(!name || !phone) return alert("Fill all fields.");
+        members.push({ id: Date.now(), memNo: 999999, displayNo: '---', name, phone, status: 'pending', savings: 0 });
+        save(); alert("Registration submitted!");
+        document.getElementById('name-in').value = ''; document.getElementById('phone-in').value = '';
+        showPage('dashboard'); renderDashboard();
+    }
+
+    function addRecord() {
+        const date = document.getElementById('rec-date').value;
+        const memNo = document.getElementById('rec-memno').value;
+        const person = document.getElementById('rec-person').value;
+        const details = document.getElementById('rec-details').value;
+        if(!date || !memNo || !person || !details) return alert("Fill all fields.");
+        financialRecords.unshift({ id: Date.now(), date, memNo, receiver: person, details });
+        localStorage.setItem('comrades_records', JSON.stringify(financialRecords));
+        renderRecords();
+    }
+
+    function deleteRecord(id) {
+        if(confirm("Delete record?")) {
+            financialRecords = financialRecords.filter(r => r.id !== id);
+            localStorage.setItem('comrades_records', JSON.stringify(financialRecords));
+            renderRecords();
+        }
+    }
+
+    function renderRecords() {
+        const list = document.getElementById('record-list');
+        const searchTerm = document.getElementById('record-search').value.toLowerCase();
+        const filtered = financialRecords.filter(r => r.memNo.toLowerCase().includes(searchTerm) || r.receiver.toLowerCase().includes(searchTerm));
+        list.innerHTML = filtered.map(r => `
+            <tr>
+                <td><b>${r.date}</b></td>
+                <td>${r.memNo}</td>
+                <td>${r.receiver}</td>
+                <td class="details-cell">${r.details}</td>
+                <td class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
+                    <button class="action-btn btn-del" onclick="deleteRecord(${r.id})">Del</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function editSavings(id) {
+        const member = members.find(m => m.id === id);
+        const newAmt = prompt("New Savings for " + member.name, member.savings);
+        if (newAmt !== null) {
+            members = members.map(m => m.id === id ? {...m, savings: parseFloat(newAmt)} : m);
+            save(); renderDashboard();
+        }
+    }
+
+    function editNumber(id) {
+        const member = members.find(m => m.id === id);
+        const newNo = prompt("New Member No:", member.displayNo);
+        if (newNo !== null) {
+            members = members.map(m => m.id === id ? {...m, memNo: parseInt(newNo) || 999999, displayNo: newNo} : m);
+            save(); renderDashboard();
+        }
+    }
+
+    function deleteMember(id) {
+        if(confirm("Delete member?")) {
+            members = members.filter(m => m.id !== id);
+            save(); renderDashboard();
+        }
+    }
+
+    function setMemberStatus(id, stat) {
+        members = members.map(m => m.id === id ? {...m, status: stat} : m);
+        save(); renderHistory(); renderDashboard();
+    }
+
+    function save() { localStorage.setItem('comrades_sys', JSON.stringify(members)); }
+
+    function renderDashboard() {
+        const list = document.getElementById('dash-list');
+        list.innerHTML = members.sort((a,b)=>a.memNo-b.memNo).map(m => `
+            <tr>
+                <td style="color:var(--active-red); font-weight:800">${m.displayNo} ${isAdmin?`<button class="action-btn btn-edit" onclick="editNumber(${m.id})">E</button>`:''}</td>
+                <td><b>${m.name}</b></td>
+                <td>${m.phone}</td>
+                <td>${m.savings} ${isAdmin?`<button class="action-btn btn-edit" onclick="editSavings(${m.id})">E</button>`:''}</td>
+                <td><span class="status-pill status-${m.status}">${m.status} MEMBER</span></td>
+                <td class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
+                    <button class="action-btn btn-del" onclick="deleteMember(${m.id})">Del</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        const pending = members.filter(m => m.status === 'pending');
+        list.innerHTML = pending.map(m => `
+            <tr>
+                <td>${m.name}</td>
+                <td>${m.phone}</td>
+                <td>
+                    <button class="action-btn btn-app" onclick="setMemberStatus(${m.id},'approved')">✔</button>
+                    <button class="action-btn btn-rej" onclick="setMemberStatus(${m.id},'rejected')">✘</button>
+                </td>
+            </tr>
+        `).join('') || '<tr><td colspan="3">None</td></tr>';
+    }
+
+    renderDashboard(); renderRecords(); renderRules();
+</script>
+</body>
+</html>
