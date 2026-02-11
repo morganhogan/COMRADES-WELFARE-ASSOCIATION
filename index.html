@@ -116,9 +116,31 @@
         .footer { background: var(--welfare-blue); color: white; text-align: center; padding: 30px 20px; margin-top: 50px; font-size: 14px; }
         
         tfoot tr td { background: #f1f2f6; font-weight: bold; color: var(--welfare-blue); border-top: 2px solid var(--welfare-blue); }
+
+        /* Fullscreen Photo Styles */
+        #photo-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #photo-overlay img { max-width: 95%; max-height: 95%; border: 3px solid white; }
+        #photo-overlay .close-overlay {
+            position: absolute;
+            top: 20px; right: 20px;
+            color: white; font-size: 30px; font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
+<div id="photo-overlay">
+    <span class="close-overlay" onclick="closePhoto()">&times;</span>
+    <img id="overlay-img" src="">
+</div>
 
 <div class="header">
     <h1>COMRADES WELFARE</h1>
@@ -144,17 +166,17 @@
                         <th>NO.</th>
                         <th>NAME</th>
                         <th>PHONE</th>
-                        <th>PHOTO</th>
                         <th>SAVINGS</th>
                         <th>STATUS</th>
+                        <th>PHOTO</th>
                         <th class="admin-only-cell" style="display: none;">ACTION</th>
                     </tr>
                 </thead>
                 <tbody id="dash-list"></tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="4" style="text-align: right;">TOTAL SAVINGS:</td>
-                        <td id="total-savings-cell" colspan="3">0</td>
+                        <td colspan="3" style="text-align: right;">TOTAL SAVINGS:</td>
+                        <td id="total-savings-cell" colspan="4">0</td>
                     </tr>
                 </tfoot>
             </table>
@@ -195,6 +217,7 @@
         <div id="admin-record-entry" class="admin-section" style="display: none;">
             <h3 style="color: var(--active-red); margin-top: 0;">🛠️ Add New Record</h3>
             <input type="date" id="rec-date">
+            <input type="text" id="rec-memno" placeholder="Member No (Optional Reference)">
             <input type="text" id="rec-person" placeholder="Received By">
             <textarea id="rec-details" rows="4" placeholder="Transaction Details..."></textarea>
             <button class="btn-main" onclick="addRecord()" style="background: var(--success);">SAVE RECORD</button>
@@ -298,8 +321,8 @@
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 300;
                     const scale = MAX_WIDTH / img.width;
-                    const ctx = canvas.getContext('2d');
                     canvas.width = MAX_WIDTH; canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     resolve(canvas.toDataURL('image/jpeg', 0.7));
                 };
@@ -308,8 +331,12 @@
     }
 
     function viewPhoto(data) {
-        const win = window.open();
-        win.document.write(`<img src="${data}" style="max-width:100%; height:auto;">`);
+        document.getElementById('overlay-img').src = data;
+        document.getElementById('photo-overlay').style.display = 'flex';
+    }
+
+    function closePhoto() {
+        document.getElementById('photo-overlay').style.display = 'none';
     }
 
     function renderDashboard() {
@@ -323,13 +350,13 @@
             
             return `
                 <tr>
-                    <td data-label="NO." style="color:var(--active-red); font-weight:800">${m.displayNo} ${isAdmin?`<button onclick="editNumber(${m.id})">E</button>`:''}</td>
-                    <td data-label="NAME"><b>${m.name}</b></td>
-                    <td data-label="PHONE">${m.phone}</td>
-                    <td data-label="PHOTO">${m.photo ? `<span class="btn-view" onclick="viewPhoto('${m.photo}')">VIEW</span>` : 'N/A'}</td>
-                    <td data-label="SAVINGS">${m.savings} ${isAdmin?`<button onclick="editSavings(${m.id})">E</button>`:''}</td>
-                    <td data-label="STATUS"><span class="status-pill status-${m.status}">${m.status}</span></td>
-                    <td data-label="ACTION" class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
+                    <td style="color:var(--active-red); font-weight:800">${m.displayNo} ${isAdmin?`<button onclick="editNumber(${m.id})">E</button>`:''}</td>
+                    <td><b>${m.name}</b></td>
+                    <td>${m.phone}</td>
+                    <td>${m.savings} ${isAdmin?`<button onclick="editSavings(${m.id})">E</button>`:''}</td>
+                    <td><span class="status-pill status-${m.status}">${m.status}</span></td>
+                    <td>${m.photo ? `<span class="btn-view" onclick="viewPhoto('${m.photo}')">VIEW</span>` : 'N/A'}</td>
+                    <td class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
                         <button class="action-btn btn-del" onclick="deleteMember(${m.id})">Del</button>
                     </td>
                 </tr>
@@ -342,15 +369,13 @@
     function renderRecords() {
         const list = document.getElementById('record-list');
         const search = document.getElementById('record-search').value.toLowerCase();
-        // Updated filter to search by receiver or details
         const filtered = financialRecords.filter(r => r.receiver.toLowerCase().includes(search) || r.details.toLowerCase().includes(search));
         
         list.innerHTML = filtered.map(r => `
             <tr>
-                <td data-label="DATE"><b>${r.date}</b></td>
-                <td data-label="RECEIVER"><b>${r.receiver}</b></td> 
-                <td data-label="DETAILS" class="details-cell">${r.details}</td>
-                <td data-label="ACTION" class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
+                <td><b>${r.date}</b></td>
+                <td><b>${r.receiver}</b></td> <td class="details-cell">${r.details}</td>
+                <td class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
                     <button class="action-btn btn-del" onclick="deleteRec(${r.id})">Del</button>
                 </td>
             </tr>
@@ -377,13 +402,7 @@
         document.getElementById('admin-history').style.display = b;
         document.getElementById('admin-record-entry').style.display = b;
         document.getElementById('admin-rules-section').style.display = b;
-        document.querySelectorAll('.admin-only-cell').forEach(el => {
-            if(window.innerWidth > 768) {
-                el.style.display = t;
-            } else {
-                el.style.display = (t === 'none') ? 'none' : 'block';
-            }
-        });
+        document.querySelectorAll('.admin-only-cell').forEach(el => el.style.display = t);
     }
 
     function showPage(p) {
@@ -395,13 +414,13 @@
 
     function addRecord() {
         const date = document.getElementById('rec-date').value;
+        const memNo = document.getElementById('rec-memno').value || "N/A";
         const person = document.getElementById('rec-person').value;
         const details = document.getElementById('rec-details').value;
-        // Removed memNo check
-        if(!date || !person || !details) return alert("Fill all fields.");
-        financialRecords.unshift({id: Date.now(), date, receiver: person, details});
+        if(!date || !person || !details) return alert("Fill required fields (Date, Receiver, Details).");
+        financialRecords.unshift({id: Date.now(), date, memNo, receiver: person, details});
         save();
-        document.getElementById('rec-person').value = ''; document.getElementById('rec-details').value = '';
+        document.getElementById('rec-memno').value = ''; document.getElementById('rec-details').value = '';
     }
 
     function deleteRec(id) { if(confirm("Delete record?")) { financialRecords = financialRecords.filter(r => r.id !== id); save(); } }
@@ -421,45 +440,13 @@
         const list = document.getElementById('history-list');
         const pending = members.filter(m => m.status === 'pending');
         list.innerHTML = pending.map(m => `
-            <tr><td data-label="NAME">${m.name}</td><td data-label="PHONE">${m.phone}</td>
-            <td data-label="ACTION"><button class="action-btn btn-app" onclick="setMemberStatus(${m.id},'approved')">✔</button>
+            <tr><td>${m.name}</td><td>${m.phone}</td>
+            <td><button class="action-btn btn-app" onclick="setMemberStatus(${m.id},'approved')">✔</button>
             <button class="action-btn btn-rej" onclick="setMemberStatus(${m.id},'rejected')">✘</button></td></tr>
         `).join('') || '<tr><td colspan="3">None</td></tr>';
     }
     function updateRules() { welfareRules = document.getElementById('rules-input').value; save(); }
     function renderRules() { document.getElementById('rules-display').innerText = welfareRules; document.getElementById('rules-input').value = welfareRules; }
 </script>
-
-<style>
-    /* Full screen Photo View Modal */
-    #photoModal { display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.9); cursor:pointer; align-items:center; justify-content:center; }
-    #fullScreenImg { max-width:90%; max-height:90%; border:3px solid white; border-radius:10px; }
-
-    /* Mobile Table Fix */
-    @media screen and (max-width: 768px) {
-        .container { padding: 10px; }
-        thead { display: none; } /* Hide headers */
-        tr { display: block; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fff; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        td { display: block; text-align: right; border-bottom: 1px solid #eee; padding: 8px 5px; position: relative; }
-        td:last-child { border-bottom: none; }
-        td::before { content: attr(data-label); position: absolute; left: 10px; font-weight: bold; color: var(--welfare-blue); text-transform: uppercase; font-size: 11px; }
-        tfoot tr td { text-align: center; }
-        tfoot tr td::before { content: ""; }
-    }
-</style>
-
-<div id="photoModal" onclick="this.style.display='none'">
-    <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; font-weight:bold;">&times;</span>
-    <img id="fullScreenImg">
-</div>
-
-<script>
-    // Overwrite the viewPhoto function to use the Modal
-    window.viewPhoto = function(data) {
-        document.getElementById('fullScreenImg').src = data;
-        document.getElementById('photoModal').style.display = 'flex';
-    };
-</script>
-
 </body>
 </html>
