@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comrades Welfare Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         :root {
             --welfare-blue: #003366;
@@ -26,18 +28,8 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .header h2 {
-            font-size: 16px;
-            margin-top: 5px;
-        }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .header h2 { font-size: 16px; margin-top: 5px; }
 
         .admin-btn {
             position: absolute;
@@ -95,7 +87,6 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
         th { background: #f1f2f6; color: var(--welfare-blue); font-weight: bold; }
         
-        /* Dynamic Status Pill Classes */
         .status-pill {
             padding: 5px 10px;
             color: white;
@@ -105,61 +96,26 @@
             display: inline-block;
             border-radius: 4px;
         }
-        /* Color logic */
         .status-approved { background-color: var(--success); }
         .status-pending, .status-rejected { background-color: var(--active-red); }
 
         .form-card { background: #f9f9f9; padding: 25px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #eee; }
         input, textarea { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; font-family: inherit; }
-        #name-in { text-transform: uppercase; }
-
+        
         .btn-main { background: var(--welfare-blue); color: white; border: none; padding: 15px; border-radius: 6px; font-size: 18px; font-weight: 700; cursor: pointer; width: 100%; }
         
         .action-btn { padding: 6px 10px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 11px; margin-left: 5px; }
-        .btn-app { background: var(--success); font-size: 14px; padding: 8px 16px;}
-        .btn-rej { background: var(--danger); font-size: 14px; padding: 8px 16px;}
-        .btn-edit { background: var(--accent); }
+        .btn-view { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; }
         .btn-del { background: var(--danger); }
+        .btn-app { background: var(--success); }
+        .btn-rej { background: var(--danger); }
 
         .admin-section { border: 2px dashed var(--active-red); padding: 20px; border-radius: 10px; margin-bottom: 30px; background: #fff8f8; }
-
         .details-cell { white-space: pre-wrap; line-height: 1.6; vertical-align: top; }
+
+        .footer { background: var(--welfare-blue); color: white; text-align: center; padding: 30px 20px; margin-top: 50px; font-size: 14px; }
         
-        .search-box {
-            margin-bottom: 20px;
-            background: #eef2f7;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #d1d8e0;
-        }
-
-        .rules-box {
-            background: #fff;
-            padding: 20px;
-            border-left: 5px solid var(--welfare-blue);
-            white-space: pre-wrap;
-            line-height: 1.8;
-            font-size: 16px;
-        }
-
-        .footer {
-            background: var(--welfare-blue);
-            color: white;
-            text-align: center;
-            padding: 30px 20px;
-            margin-top: 50px;
-            font-size: 14px;
-        }
-
-        @media (max-width: 600px) {
-            .header h1 { font-size: 22px; }
-            .header h2 { font-size: 14px; }
-            .admin-btn { right: 10px; padding: 6px; font-size: 18px; }
-            .nav-item { padding: 15px 2px; font-size: 11px; }
-            .container { padding: 15px; margin: 10px; }
-            th, td { padding: 10px 5px; font-size: 12px; }
-            .btn-main { font-size: 16px; }
-        }
+        tfoot tr td { background: #f1f2f6; font-weight: bold; color: var(--welfare-blue); border-top: 2px solid var(--welfare-blue); }
     </style>
 </head>
 <body>
@@ -167,7 +123,7 @@
 <div class="header">
     <h1>COMRADES WELFARE</h1>
     <h2>Management Information System</h2>
-    <div class="admin-btn" id="lock-icon" onclick="toggleAdmin()" title="Admin Login">🔒</div>
+    <div class="admin-btn" id="lock-icon" onclick="toggleAdmin()">🔒</div>
 </div>
 
 <div class="nav-bar">
@@ -182,18 +138,25 @@
     <div id="dashboard" class="page active">
         <h3 style="color: var(--welfare-blue);">📋 Welfare Member List</h3>
         <div class="table-responsive">
-            <table>
+            <table id="members-table">
                 <thead>
                     <tr>
                         <th>NO.</th>
                         <th>NAME</th>
                         <th>PHONE</th>
+                        <th>PHOTO</th>
                         <th>SAVINGS</th>
                         <th>STATUS</th>
                         <th class="admin-only-cell" style="display: none;">ACTION</th>
                     </tr>
                 </thead>
                 <tbody id="dash-list"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="text-align: right;">TOTAL SAVINGS:</td>
+                        <td id="total-savings-cell" colspan="3">0</td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
@@ -204,11 +167,7 @@
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr>
-                            <th>NAME</th>
-                            <th>PHONE</th>
-                            <th>ACTION</th>
-                        </tr>
+                        <tr><th>NAME</th><th>PHONE</th><th>ACTION</th></tr>
                     </thead>
                     <tbody id="history-list"></tbody>
                 </table>
@@ -217,10 +176,12 @@
 
         <div class="form-card">
             <h3 style="margin-top:0;">New Member Signup</h3>
-            <label style="font-weight:600">Full Name (Auto-Capital)</label>
+            <label style="font-weight:600">Full Name</label>
             <input type="text" id="name-in" placeholder="ENTER YOUR FULL NAME" oninput="this.value = this.value.toUpperCase()">
             <label style="font-weight:600">Phone Number</label>
             <input type="text" id="phone-in" placeholder="e.g. 0712345678">
+            <label style="font-weight:600">Member Photo</label>
+            <input type="file" id="photo-in" accept="image/*">
             <button class="btn-main" onclick="submitReg()">SUBMIT REGISTRATION</button>
         </div>
     </div>
@@ -228,7 +189,7 @@
     <div id="records" class="page">
         <h3 style="color: var(--welfare-blue);">💰 Collection Records</h3>
         <div class="search-box">
-            <input type="text" id="record-search" placeholder="Search No or Name..." onkeyup="renderRecords()" style="margin-bottom:0;">
+            <input type="text" id="record-search" placeholder="Search No or Name..." onkeyup="renderRecords()" style="margin-bottom:20px; width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
         </div>
 
         <div id="admin-record-entry" class="admin-section" style="display: none;">
@@ -259,11 +220,10 @@
     <div id="rules" class="page">
         <h3 style="color: var(--welfare-blue);">📜 Welfare Rules</h3>
         <div id="admin-rules-section" class="admin-section" style="display: none;">
-            <h3 style="color: var(--active-red); margin-top: 0;">🛠️ Edit Rules (Admin)</h3>
-            <textarea id="rules-input" rows="10" placeholder="Write rules here..."></textarea>
+            <textarea id="rules-input" rows="10" style="width:100%"></textarea>
             <button class="btn-main" onclick="updateRules()" style="background: var(--success);">SAVE RULES</button>
         </div>
-        <div class="rules-box" id="rules-display">No rules set yet.</div>
+        <div class="rules-box" id="rules-display"></div>
     </div>
 
 </div>
@@ -275,66 +235,157 @@
 </div>
 
 <script>
-    let members = JSON.parse(localStorage.getItem('comrades_sys')) || [];
-    let financialRecords = JSON.parse(localStorage.getItem('comrades_records')) || [];
-    let welfareRules = localStorage.getItem('comrades_rules_text') || "1. Respect all members.\n2. Pay contributions on time.";
-    let isAdmin = false;
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBTDFtl3cpPrSY45fM8o73Zy5D-ARPaxE",
+      authDomain: "comrades-storage.firebaseapp.com",
+      databaseURL: "https://comrades-storage-default-rtdb.firebaseio.com",
+      projectId: "comrades-storage",
+      storageBucket: "comrades-storage.firebasestorage.app",
+      messagingSenderId: "892097114915",
+      appId: "1:892097114915:web:48eedf218e65bb45a11296"
+    };
 
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let members = [];
+    let financialRecords = [];
+    let welfareRules = "";
+    let isAdmin = false;
     const secret = "NDE3MzgyMDg="; 
+
+    db.ref('welfare_system_data').on('value', (snapshot) => {
+        const data = snapshot.val() || {};
+        members = data.members || [];
+        financialRecords = data.records || [];
+        welfareRules = data.rules || "1. Respect all members.\n2. Pay contributions on time.";
+        renderDashboard();
+        renderRecords();
+        renderHistory();
+        renderRules();
+    });
+
+    function save() {
+        db.ref('welfare_system_data').set({
+            members: members,
+            records: financialRecords,
+            rules: welfareRules
+        });
+    }
+
+    async function submitReg() {
+        const name = document.getElementById('name-in').value.toUpperCase();
+        const phone = document.getElementById('phone-in').value;
+        const photoFile = document.getElementById('photo-in').files[0];
+        if(!name || !phone) return alert("Please fill Name and Phone.");
+        
+        let photoBase64 = "";
+        if(photoFile) photoBase64 = await convertAndCompress(photoFile);
+
+        members.push({ id: Date.now(), memNo: 999999, displayNo: '---', name, phone, photo: photoBase64, status: 'pending', savings: 0 });
+        save();
+        alert("Registration submitted!");
+        document.getElementById('name-in').value = ''; document.getElementById('phone-in').value = ''; document.getElementById('photo-in').value = '';
+        showPage('dashboard');
+    }
+
+    function convertAndCompress(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 300;
+                    const scale = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH; canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+            };
+        });
+    }
+
+    function viewPhoto(data) {
+        const win = window.open();
+        win.document.write(`<img src="${data}" style="max-width:100%; height:auto;">`);
+    }
+
+    function renderDashboard() {
+        const list = document.getElementById('dash-list');
+        const totalCell = document.getElementById('total-savings-cell');
+        let totalSavings = 0;
+
+        list.innerHTML = [...members].sort((a,b)=>a.memNo-b.memNo).map(m => {
+            const savingsVal = parseFloat(m.savings) || 0;
+            totalSavings += savingsVal;
+            
+            return `
+                <tr>
+                    <td style="color:var(--active-red); font-weight:800">${m.displayNo} ${isAdmin?`<button onclick="editNumber(${m.id})">E</button>`:''}</td>
+                    <td><b>${m.name}</b></td>
+                    <td>${m.phone}</td>
+                    <td>${m.photo ? `<span class="btn-view" onclick="viewPhoto('${m.photo}')">VIEW</span>` : 'N/A'}</td>
+                    <td>${m.savings} ${isAdmin?`<button onclick="editSavings(${m.id})">E</button>`:''}</td>
+                    <td><span class="status-pill status-${m.status}">${m.status}</span></td>
+                    <td class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
+                        <button class="action-btn btn-del" onclick="deleteMember(${m.id})">Del</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        totalCell.innerText = totalSavings.toLocaleString();
+    }
+
+    function renderRecords() {
+        const list = document.getElementById('record-list');
+        const search = document.getElementById('record-search').value.toLowerCase();
+        const filtered = financialRecords.filter(r => r.memNo.toLowerCase().includes(search) || r.receiver.toLowerCase().includes(search));
+        
+        list.innerHTML = filtered.map(r => `
+            <tr>
+                <td><b>${r.date}</b></td>
+                <td>${r.memNo}</td>
+                <td><b>${r.receiver}</b></td> <td class="details-cell">${r.details}</td>
+                <td class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
+                    <button class="action-btn btn-del" onclick="deleteRec(${r.id})">Del</button>
+                </td>
+            </tr>
+        `).join('');
+    }
 
     function toggleAdmin() {
         if (!isAdmin) {
-            const pass = prompt("Administrator Password Required:");
+            const pass = prompt("Admin Password:");
             if (btoa(pass) === secret) {
                 isAdmin = true;
                 document.getElementById('lock-icon').innerText = "🔓";
-                document.getElementById('lock-icon').style.background = "var(--active-red)";
-                document.getElementById('admin-history').style.display = "block";
-                document.getElementById('admin-record-entry').style.display = "block";
-                document.getElementById('admin-rules-section').style.display = "block";
-                document.querySelectorAll('.admin-only-cell').forEach(el => el.style.display = "table-cell");
-            } else { alert("Incorrect password."); }
+                updateAdminView("block", "table-cell");
+            }
         } else {
             isAdmin = false;
             document.getElementById('lock-icon').innerText = "🔒";
-            document.getElementById('lock-icon').style.background = "rgba(255,255,255,0.15)";
-            document.getElementById('admin-history').style.display = "none";
-            document.getElementById('admin-record-entry').style.display = "none";
-            document.getElementById('admin-rules-section').style.display = "none";
-            document.querySelectorAll('.admin-only-cell').forEach(el => el.style.display = "none");
+            updateAdminView("none", "none");
         }
-        renderDashboard(); renderRecords(); renderHistory(); renderRules();
+        renderDashboard(); renderRecords();
     }
 
-    function showPage(pageId) {
+    function updateAdminView(b, t) {
+        document.getElementById('admin-history').style.display = b;
+        document.getElementById('admin-record-entry').style.display = b;
+        document.getElementById('admin-rules-section').style.display = b;
+        document.querySelectorAll('.admin-only-cell').forEach(el => el.style.display = t);
+    }
+
+    function showPage(p) {
         document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
-        document.getElementById('tab-' + pageId).classList.add('active');
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        if(pageId === 'rules') renderRules();
-    }
-
-    function updateRules() {
-        const text = document.getElementById('rules-input').value;
-        welfareRules = text;
-        localStorage.setItem('comrades_rules_text', text);
-        renderRules();
-        alert("Rules Updated!");
-    }
-
-    function renderRules() {
-        document.getElementById('rules-display').innerText = welfareRules;
-        document.getElementById('rules-input').value = welfareRules;
-    }
-
-    function submitReg() {
-        const name = document.getElementById('name-in').value.toUpperCase();
-        const phone = document.getElementById('phone-in').value;
-        if(!name || !phone) return alert("Fill all fields.");
-        members.push({ id: Date.now(), memNo: 999999, displayNo: '---', name, phone, status: 'pending', savings: 0 });
-        save(); alert("Registration submitted!");
-        document.getElementById('name-in').value = ''; document.getElementById('phone-in').value = '';
-        showPage('dashboard'); renderDashboard();
+        document.getElementById('tab-' + p).classList.add('active');
+        document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+        document.getElementById(p).classList.add('active');
     }
 
     function addRecord() {
@@ -343,100 +394,35 @@
         const person = document.getElementById('rec-person').value;
         const details = document.getElementById('rec-details').value;
         if(!date || !memNo || !person || !details) return alert("Fill all fields.");
-        financialRecords.unshift({ id: Date.now(), date, memNo, receiver: person, details });
-        localStorage.setItem('comrades_records', JSON.stringify(financialRecords));
-        renderRecords();
+        financialRecords.unshift({id: Date.now(), date, memNo, receiver: person, details});
+        save();
+        document.getElementById('rec-memno').value = ''; document.getElementById('rec-details').value = '';
     }
 
-    function deleteRecord(id) {
-        if(confirm("Delete record?")) {
-            financialRecords = financialRecords.filter(r => r.id !== id);
-            localStorage.setItem('comrades_records', JSON.stringify(financialRecords));
-            renderRecords();
-        }
-    }
-
-    function renderRecords() {
-        const list = document.getElementById('record-list');
-        const searchTerm = document.getElementById('record-search').value.toLowerCase();
-        const filtered = financialRecords.filter(r => r.memNo.toLowerCase().includes(searchTerm) || r.receiver.toLowerCase().includes(searchTerm));
-        list.innerHTML = filtered.map(r => `
-            <tr>
-                <td><b>${r.date}</b></td>
-                <td>${r.memNo}</td>
-                <td>${r.receiver}</td>
-                <td class="details-cell">${r.details}</td>
-                <td class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
-                    <button class="action-btn btn-del" onclick="deleteRecord(${r.id})">Del</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
+    function deleteRec(id) { if(confirm("Delete record?")) { financialRecords = financialRecords.filter(r => r.id !== id); save(); } }
+    function setMemberStatus(id, stat) { members = members.map(m => m.id === id ? {...m, status: stat} : m); save(); }
+    function deleteMember(id) { if(confirm("Delete member?")) { members = members.filter(m => m.id !== id); save(); } }
     function editSavings(id) {
-        const member = members.find(m => m.id === id);
-        const newAmt = prompt("New Savings for " + member.name, member.savings);
-        if (newAmt !== null) {
-            members = members.map(m => m.id === id ? {...m, savings: parseFloat(newAmt)} : m);
-            save(); renderDashboard();
-        }
+        const m = members.find(x => x.id === id);
+        const amt = prompt("New Savings:", m.savings);
+        if(amt) { members = members.map(x => x.id === id ? {...x, savings: amt} : x); save(); }
     }
-
     function editNumber(id) {
-        const member = members.find(m => m.id === id);
-        const newNo = prompt("New Member No:", member.displayNo);
-        if (newNo !== null) {
-            members = members.map(m => m.id === id ? {...m, memNo: parseInt(newNo) || 999999, displayNo: newNo} : m);
-            save(); renderDashboard();
-        }
+        const m = members.find(x => x.id === id);
+        const no = prompt("New No:", m.displayNo);
+        if(no) { members = members.map(x => x.id === id ? {...x, displayNo: no, memNo: parseInt(no)} : x); save(); }
     }
-
-    function deleteMember(id) {
-        if(confirm("Delete member?")) {
-            members = members.filter(m => m.id !== id);
-            save(); renderDashboard();
-        }
-    }
-
-    function setMemberStatus(id, stat) {
-        members = members.map(m => m.id === id ? {...m, status: stat} : m);
-        save(); renderHistory(); renderDashboard();
-    }
-
-    function save() { localStorage.setItem('comrades_sys', JSON.stringify(members)); }
-
-    function renderDashboard() {
-        const list = document.getElementById('dash-list');
-        list.innerHTML = members.sort((a,b)=>a.memNo-b.memNo).map(m => `
-            <tr>
-                <td style="color:var(--active-red); font-weight:800">${m.displayNo} ${isAdmin?`<button class="action-btn btn-edit" onclick="editNumber(${m.id})">E</button>`:''}</td>
-                <td><b>${m.name}</b></td>
-                <td>${m.phone}</td>
-                <td>${m.savings} ${isAdmin?`<button class="action-btn btn-edit" onclick="editSavings(${m.id})">E</button>`:''}</td>
-                <td><span class="status-pill status-${m.status}">${m.status} MEMBER</span></td>
-                <td class="admin-only-cell" style="display: ${isAdmin ? 'table-cell' : 'none'}">
-                    <button class="action-btn btn-del" onclick="deleteMember(${m.id})">Del</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
     function renderHistory() {
         const list = document.getElementById('history-list');
         const pending = members.filter(m => m.status === 'pending');
         list.innerHTML = pending.map(m => `
-            <tr>
-                <td>${m.name}</td>
-                <td>${m.phone}</td>
-                <td>
-                    <button class="action-btn btn-app" onclick="setMemberStatus(${m.id},'approved')">✔</button>
-                    <button class="action-btn btn-rej" onclick="setMemberStatus(${m.id},'rejected')">✘</button>
-                </td>
-            </tr>
+            <tr><td>${m.name}</td><td>${m.phone}</td>
+            <td><button class="action-btn btn-app" onclick="setMemberStatus(${m.id},'approved')">✔</button>
+            <button class="action-btn btn-rej" onclick="setMemberStatus(${m.id},'rejected')">✘</button></td></tr>
         `).join('') || '<tr><td colspan="3">None</td></tr>';
     }
-
-    renderDashboard(); renderRecords(); renderRules();
+    function updateRules() { welfareRules = document.getElementById('rules-input').value; save(); }
+    function renderRules() { document.getElementById('rules-display').innerText = welfareRules; document.getElementById('rules-input').value = welfareRules; }
 </script>
 </body>
 </html>
